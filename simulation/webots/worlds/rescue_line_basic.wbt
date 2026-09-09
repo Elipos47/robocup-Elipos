@@ -8,14 +8,21 @@ WorldInfo {
   basicTimeStep 32
   coordinateSystem "NUE"
 }
+# Vista spawn: dietro il robot (z=-0.9), dall'alto, guarda avanti +Z.
 Viewpoint {
-  orientation 0 1 0 3.14159
-  position 0 1.6 -2.8
+  orientation 0 0.9239 0.3827 3.14159
+  position 0 1.8 -2.5
 }
 Background {
   skyColor [
     0.55 0.6 0.65
   ]
+}
+# Luci M1: flat senza ombre (castShadows FALSE) per non inquinare il threshold.
+DirectionalLight {
+  direction 0.3 -1 0.4
+  intensity 1.1
+  castShadows FALSE
 }
 DEF FLOOR Solid {
   translation 0 0 0
@@ -52,9 +59,16 @@ DEF LINE_STRAIGHT Transform {
     }
   ]
 }
-# Curva 90° a destra (marcia verso +Z, destra = -X): da x=0 a x=-1 a z=+1
-DEF LINE_TURN Transform {
-  translation -0.5 0.011 1
+# Curva 90° a destra (M1): arco r=0.3 in 6 segmenti da 15° + rettilineo dopo.
+# Dall'heading +Z all'heading -X (destra = -X per marcia +Z), centro (-0.3,1.0).
+DEF TURN_00 Transform { translation -0.0026 0.011 1.0392 rotation 0 1 0 -0.1309 children [ Shape { appearance PBRAppearance { baseColor 0.02 0.02 0.02 roughness 1 metalness 0 } geometry Box { size 0.019 0.002 0.08 } } ] }
+DEF TURN_01 Transform { translation -0.0228 0.011 1.1148 rotation 0 1 0 -0.3927 children [ Shape { appearance PBRAppearance { baseColor 0.02 0.02 0.02 roughness 1 metalness 0 } geometry Box { size 0.019 0.002 0.08 } } ] }
+DEF TURN_02 Transform { translation -0.0620 0.011 1.1826 rotation 0 1 0 -0.6545 children [ Shape { appearance PBRAppearance { baseColor 0.02 0.02 0.02 roughness 1 metalness 0 } geometry Box { size 0.019 0.002 0.08 } } ] }
+DEF TURN_03 Transform { translation -0.1174 0.011 1.2380 rotation 0 1 0 -0.9163 children [ Shape { appearance PBRAppearance { baseColor 0.02 0.02 0.02 roughness 1 metalness 0 } geometry Box { size 0.019 0.002 0.08 } } ] }
+DEF TURN_04 Transform { translation -0.1852 0.011 1.2772 rotation 0 1 0 -1.1781 children [ Shape { appearance PBRAppearance { baseColor 0.02 0.02 0.02 roughness 1 metalness 0 } geometry Box { size 0.019 0.002 0.08 } } ] }
+DEF TURN_05 Transform { translation -0.2608 0.011 1.2974 rotation 0 1 0 -1.4399 children [ Shape { appearance PBRAppearance { baseColor 0.02 0.02 0.02 roughness 1 metalness 0 } geometry Box { size 0.019 0.002 0.08 } } ] }
+DEF LINE_AFTER Transform {
+  translation -0.55 0.011 1.3
   children [
     Shape {
       appearance PBRAppearance {
@@ -63,7 +77,7 @@ DEF LINE_TURN Transform {
         metalness 0
       }
       geometry Box {
-        size 1 0.002 0.019
+        size 0.5 0.002 0.019
       }
     }
   ]
@@ -85,7 +99,7 @@ DEF MARKER_GREEN Transform {
   ]
 }
 DEF RESCUEBOT Robot {
-  translation 0 0 -1.3
+  translation 0 0 -0.9  # y=0: ruote/caster toccano il top del pavimento (y=+0.01), mai interrati
   children [
     Solid {
       translation 0 0.08 0
@@ -106,15 +120,55 @@ DEF RESCUEBOT Robot {
         size 0.16 0.07 0.22
       }
       physics Physics {
-        density 800
+        density 300  # scocca leggera: il peso sta in basso (zavorra)
       }
     }
-    # Camera verde: inclinata ~45° verso il basso (SPEC §2.1)
-    Camera {
-      translation 0 0.15 0.09
-      rotation 1 0 0 -0.785
+    # Zavorra bassa (batterie+motori veri): COM a ~0.03, anti-rollio/beccheggio.
+    # Fondo a 0.015 (5mm di luce): gli angoli sfiorano oltre ~3° di rollio e
+    # lo smorzano (outrigger) — senza, entra in risonanza rollio-sterzo ±10°
+    # (verificato 09/09/2026). Costa un po' di drag, ma M1 = robusto > veloce.
+    Solid {
+      translation 0 0.03 0
       children [
         Shape {
+          appearance PBRAppearance {
+            baseColor 0.15 0.15 0.15
+            roughness 0.8
+            metalness 0
+          }
+          geometry Box {
+            size 0.14 0.03 0.20
+          }
+        }
+      ]
+      name "ballast"
+      boundingObject Box {
+        size 0.14 0.03 0.20
+      }
+      physics Physics {
+        density 2000
+      }
+    }
+    # Placeholder cingoli M1: SKID-STEER a 4 ruote (2 per lato, stessi comandi
+    # dx/sx). Niente rotelle folli: con 4 appoggi il beccheggio e' stabile e
+    # lo skid in curva modella i cingoli veri meglio di ruote+sfere.
+    # Camera verde: guarda avanti (+Z) inclinata ~45° verso il basso (SPEC §2.1).
+    # Asse ottico nativo Camera = +X; rotation valida SOLO dentro Solid
+    # (figlia diretta di Robot: solo assi X applicati, verificato 09/09/2026).
+    # Questa rotation porta +X su (0,-0.7071,+0.7071) = avanti-basso 45°
+    # a rollio zero: +Z (up nativo) su (0,+0.7071,+0.7071), -Y su destra.
+    # (Il valore precedente 0.3574 -0.863 -0.3574 aveva Y/Z scambiati = roll 90°,
+    # linea verticale vista orizzontale. Verificato 09/09/2026.)
+    # Camera sopra il muso (z=0.12): vede l'arco da lontano (frame curva
+    # verificato: arco intero visibile). NON spostarla indietro: il body
+    # copre la vista (mean 125, buio). Il controllo deve gestire il preview.
+    DEF CAM_GREEN_MOUNT Solid {
+      translation 0 0.17 0.12
+      rotation -0.3574 -0.3574 -0.8629 1.7178
+      children [
+    Camera {
+          children [
+            Shape {
           appearance PBRAppearance {
             baseColor 0.1 0.6 0.1
             roughness 0.6
@@ -130,39 +184,25 @@ DEF RESCUEBOT Robot {
       height 480
       near 0.01
     }
-    # Camera nera: orizzontale in avanti (stanza/vittime M2)
-    Camera {
-      translation 0 0.15 0.11
-      children [
-        Shape {
-          appearance PBRAppearance {
-            baseColor 0.05 0.05 0.05
-            roughness 0.6
-            metalness 0
-          }
-          geometry Box {
-            size 0.03 0.03 0.03
-          }
-        }
       ]
-      name "camera_black"
-      width 640
-      height 480
-      near 0.01
     }
+    # NOTA M1: camera nera (stanza/vittime M2) rimossa — il suo overlay nero
+    # confondeva il debug (device mai abilitato). Riaggiungerla dentro un
+    # Solid come la verde quando si attiva M2.
     HingeJoint {
       jointParameters HingeJointParameters {
         axis 1 0 0
-        anchor -0.095 0.04 0
+        anchor -0.095 0.04 0.10
       }
       device [
         RotationalMotor {
-          name "motor_left"
+          name "motor_fr"
           maxVelocity 10
+          maxTorque 5.0
         }
       ]
-      endPoint Solid {
-        translation -0.095 0.04 0
+      endPoint DEF WHEEL_FR Solid {
+        translation -0.095 0.04 0.10
         rotation 0 0 1 1.5708
         children [
           Shape {
@@ -177,7 +217,7 @@ DEF RESCUEBOT Robot {
             }
           }
         ]
-        name "wheel_left"
+        name "wheel_fr"
         boundingObject Cylinder {
           radius 0.03
           height 0.025
@@ -190,16 +230,17 @@ DEF RESCUEBOT Robot {
     HingeJoint {
       jointParameters HingeJointParameters {
         axis 1 0 0
-        anchor 0.095 0.04 0
+        anchor -0.095 0.04 -0.10
       }
       device [
         RotationalMotor {
-          name "motor_right"
+          name "motor_rr"
           maxVelocity 10
+          maxTorque 5.0
         }
       ]
-      endPoint Solid {
-        translation 0.095 0.04 0
+      endPoint DEF WHEEL_RR Solid {
+        translation -0.095 0.04 -0.10
         rotation 0 0 1 1.5708
         children [
           Shape {
@@ -214,7 +255,83 @@ DEF RESCUEBOT Robot {
             }
           }
         ]
-        name "wheel_right"
+        name "wheel_rr"
+        boundingObject Cylinder {
+          radius 0.03
+          height 0.025
+        }
+        physics Physics {
+          density 900
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 1 0 0
+        anchor 0.095 0.04 0.10
+      }
+      device [
+        RotationalMotor {
+          name "motor_fl"
+          maxVelocity 10
+          maxTorque 5.0
+        }
+      ]
+      endPoint DEF WHEEL_FL Solid {
+        translation 0.095 0.04 0.10
+        rotation 0 0 1 1.5708
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.08 0.08 0.08
+              roughness 0.9
+              metalness 0
+            }
+            geometry Cylinder {
+              radius 0.03
+              height 0.025
+            }
+          }
+        ]
+        name "wheel_fl"
+        boundingObject Cylinder {
+          radius 0.03
+          height 0.025
+        }
+        physics Physics {
+          density 900
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 1 0 0
+        anchor 0.095 0.04 -0.10
+      }
+      device [
+        RotationalMotor {
+          name "motor_rl"
+          maxVelocity 10
+          maxTorque 5.0
+        }
+      ]
+      endPoint DEF WHEEL_RL Solid {
+        translation 0.095 0.04 -0.10
+        rotation 0 0 1 1.5708
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.08 0.08 0.08
+              roughness 0.9
+              metalness 0
+            }
+            geometry Cylinder {
+              radius 0.03
+              height 0.025
+            }
+          }
+        ]
+        name "wheel_rl"
         boundingObject Cylinder {
           radius 0.03
           height 0.025
@@ -232,4 +349,8 @@ DEF RESCUEBOT Robot {
   # impedirebbe alle ruote di toccare il suolo, quindi resta sui singoli Solid.
   physics Physics {
   }
+}
+DEF PROBE Robot {
+  supervisor TRUE
+  controller "pose_probe"
 }

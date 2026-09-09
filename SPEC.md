@@ -349,18 +349,21 @@ webots --version
 
 ### 6.3 Creazione Mondo Custom
 ```python
-# simulation/webots/worlds/rescue_line_basic.wbt
-# Struttura minima:
+# simulation/webots/worlds/rescue_line_basic.wbt (stato verificato 09/09/2026)
 WEBOTS
-├── Robot (custom o e-puck modificato)
-│   ├── Camera (green_filter)
-│   ├── Camera (black_filter)
-│   ├── DistanceSensor (x4)
-│   └── Motor (left, right)
-├── Floor (linea nera 19mm su bianco, §7.1)
-├── Obstacles (box neri per ostacoli)
-└── Victims (sfere colorate per palline)
+├── RESCUEBOT Robot (skid-steer, placeholder cingoli M1)
+│   ├── body + ballast basso (COM ~0.035; angoli anti-rollio, vedi nota)
+│   ├── CAM_GREEN_MOUNT (Solid) + Camera verde 640x480 ~45° basso (linea)
+│   └── 4x HingeJoint asse X + RotationalMotor (fl/rl sx, fr/rr dx, maxTorque 5.0)
+├── Floor bianco 3x3 (top y=+0.01) + linea nera 19mm: 2m dritto + arco 90°
+│   r=0.3 in 6 segmenti tangenziali + rettilineo finale + marker verde
+└── Viewpoint dietro il robot (vede pista, non muro)
 ```
+> NOTA (verificato 09/09/2026, 3 run identici): niente rotelle folli — con
+> 2 ruote + sfere il robot entra in risonanza rollio-sterzo ±10°. Lo skid
+> a 4 ruote + zavorra bassa modella i cingoli veri. Camera nera rimossa in
+> M1 (overlay nero confondeva); torna in M2 dentro un Solid. Vista spawn
+> da dietro-alto, non radente.
 
 ### 6.4 Controller Python Base
 ```python
@@ -370,29 +373,28 @@ from controller import Robot, Camera, DistanceSensor, Motor
 robot = Robot()
 timestep = int(robot.getBasicTimeStep())
 
-# Inizializza dispositivi
+# Inizializza dispositivi (M1: solo camera verde; nera in M2)
 camera_green = robot.getDevice("camera_green")
-camera_black = robot.getDevice("camera_black")
 camera_green.enable(timestep)
-camera_black.enable(timestep)
 
-motor_left = robot.getDevice("motor_left")
-motor_right = robot.getDevice("motor_right")
-motor_left.setPosition(float('inf'))
-motor_right.setPosition(float('inf'))
+# Skid-steer M1: coppie fl/rl = sinistra, fr/rr = destra (stessi comandi)
+motors_left = [robot.getDevice(n) for n in ("motor_fl", "motor_rl")]
+motors_right = [robot.getDevice(n) for n in ("motor_fr", "motor_rr")]
+for m in motors_left + motors_right:
+    m.setPosition(float('inf'))
 
 # Loop principale
 while robot.step(timestep) != -1:
-    # Leggi sensori
+    # Leggi sensori (M1: solo linea nera)
     image_green = camera_green.getImage()
-    image_black = camera_black.getImage()
     
     # Elabora (qui chiamerai la state machine)
-    # state_machine.update(image_green, image_black)
+    # state_machine.update(image_green)
     
-    # Scrivi su motori
-    motor_left.setVelocity(5.0)
-    motor_right.setVelocity(5.0)
+    # Scrivi su motori (coppie skid: fl/rl=sx, fr/rr=dx)
+    # vedi src/control/motor_control.py: tank_mix + PID + slew (M1 verificato:
+    # dritto ±2mm, arco 90° r=0.3, stop a fine linea — 3/3 run 09/09/2026)
+    ...
 ```
 
 ---
