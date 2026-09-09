@@ -55,5 +55,5 @@ L298N ──► Arduino (PWM/DIR) + Batterie (potenza)
 - [ ] Batterie: V, chimica, capacità reale
 - [ ] Sigla giroscopio, servo, stepdown (V out)
 - [ ] A cosa è collegato meccanicamente il servo
-- [ ] Export Fusion 360: STEP + STL + screenshot quotato
-  (interasse, larghezza cinghie, altezza camere da terra)
+- [x] Export Fusion 360: `hardware/cad/assieme completo.step` (32MB, ricevuto 09/09/2026,
+  ancora senza ruote/cingoli) → misure quando il modello sarà completo
