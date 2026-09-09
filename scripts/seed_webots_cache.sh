@@ -37,5 +37,15 @@ projects/appearances/protos/textures/copper/copper_roughness.jpg
 projects/appearances/protos/textures/copper/copper_metalness.jpg
 projects/default/worlds/textures/cubic/mountains_right.jpg
 projects/default/worlds/textures/cubic/mountains_right.hdr
+projects/default/worlds/textures/cubic/mountains_left.jpg
+projects/default/worlds/textures/cubic/mountains_left.hdr
+projects/default/worlds/textures/cubic/mountains_front.jpg
+projects/default/worlds/textures/cubic/mountains_front.hdr
+projects/default/worlds/textures/cubic/mountains_back.jpg
+projects/default/worlds/textures/cubic/mountains_back.hdr
+projects/default/worlds/textures/cubic/mountains_top.jpg
+projects/default/worlds/textures/cubic/mountains_top.hdr
+projects/default/worlds/textures/cubic/mountains_bottom.jpg
+projects/default/worlds/textures/cubic/mountains_bottom.hdr
 ASSETS
 echo "== ok:$ok fail:$fail total:$(ls "$CACHE" | wc -l)"
