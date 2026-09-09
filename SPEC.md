@@ -336,9 +336,10 @@ webots --version
 > (`Cannot download ... error code: 2: Connection closed` / 399) lasciando
 > robot grigi senza texture. La rete è a posto (curl scarica a 200 OK):
 > è il downloader di Webots a troncare le connessioni verso il CDN di GitHub.
-> Fix: `bash scripts/seed_webots_cache.sh` pre-scarica gli asset con curl
-> nella cache (`%LOCALAPPDATA%/Cyberbotics/Webots/cache/assets`,
-> nome file = SHA1 dell'URL). I nostri mondi useranno solo texture locali,
+> Fix: alla prima apertura premi il pulsante `Auto` nel dialogo di download
+> (scarica tutto in un colpo solo) oppure riapri il mondo finché la cache
+> (`%LOCALAPPDATA%/Cyberbotics/Webots/cache/assets`) è completa.
+> I nostri mondi useranno solo texture locali,
 > quindi il problema non si ripresenta nel progetto.
 
 ### 6.2 Primo Test
