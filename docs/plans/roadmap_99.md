@@ -7,7 +7,10 @@ I fallimenti solo esterni non rompono il conteggio ma generano contromisure.
 ## M0 — Setup (settembre 2026, questa settimana)
 
 - [ ] Env dev su PC: venv + numpy/opencv/pyserial/pytest (`scripts/setup_dev.sh`)
-- [ ] Webots 2026a installato (installer ufficiale, ~3GB)
+- [ ] Webots **R2025a stable** installato (installer ufficiale, ~3GB).
+  Upgrade a 2026a solo quando esce la stable: le nightly 2026 sono rumore
+  esterno (bug del sim scambiati per bug nostri). API usata (Camera/
+  DistanceSensor/Motor) stabile tra versioni; mondi .wbt compatibili in avanti.
 - [ ] Mondo placeholder + robot tank-drive che si muove (controller minimo)
 - [ ] `pytest src/tests -q` verde + prima run loggata in `docs/logs/`
 
