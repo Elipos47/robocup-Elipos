@@ -25,7 +25,7 @@ Sviluppo del software di controllo per un robot **Rescue Line** con architettura
 ### 1.3 Stack Software
 | Layer | Tecnologia | Note |
 |-------|------------|------|
-| Simulazione | Webots 2026a+ | Ambiente di test primario |
+| Simulazione | Webots R2025a stable | Ambiente di test primario |
 | Linguaggio | Python 3.10+ | Codice principale su Raspberry Pi |
 | Firmware | Arduino C++ | Solo per controllo motori a bassa latenza |
 | Comunicazione | Serial (USB) / MQTT | Pi ↔ Arduino |
@@ -318,11 +318,12 @@ STATES = {
 
 ### 6.1 Installazione
 ```bash
-# Linux (Ubuntu/Debian)
-wget https://github.com/cyberbotics/webots/releases/download/R2026a/webots-R2026a_24.04_amd64.deb
-sudo dpkg -i webots-R2026a_24.04_amd64.deb
+# Linux (Ubuntu/Debian): .deb R2025a da
+# https://github.com/cyberbotics/webots/releases (tag R2025a)
 
 # Windows
+# Installer R2025a stable da https://cyberbotics.com (niente nightly 2026:
+# rumore esterno, API Camera/DistanceSensor/Motor stabili tra versioni)
 # Scarica installer da https://cyberbotics.com e segui wizard
 
 # Verifica installazione

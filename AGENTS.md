@@ -7,3 +7,4 @@
 5. Logging strutturato via `src/utils/logger.py` (formato JSON §9.1 SPEC).
 6. Calibrazione camere manuale, documentata in `docs/calibration.md`. Niente auto-calibrazione.
 7. Review con `skills/robocop-code-quality` prima di proporre merge.
+8. SPEC.md sempre allineato: ogni decisione reale (versioni, hardware, scope) va riflessa in SPEC.md.
