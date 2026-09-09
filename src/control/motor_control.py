@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from src.utils.config import MOTOR_MAX_PWM, PID_KD, PID_KI, PID_KP
+from src.utils.config import (
+    MAX_WHEEL_RAD_S,
+    MOTOR_MAX_PWM,
+    PID_KD,
+    PID_KI,
+    PID_KP,
+    WHEEL_DIRECTION,
+)
 
 
 class PIDController:
@@ -47,7 +54,25 @@ class PIDController:
 
 
 def tank_mix(base_pwm: int, correction: float) -> tuple[int, int]:
-    """Miscela differenziale: (pwm_sx, pwm_dx) saturati a ±MOTOR_MAX_PWM."""
-    left = max(-MOTOR_MAX_PWM, min(MOTOR_MAX_PWM, int(base_pwm - correction)))
-    right = max(-MOTOR_MAX_PWM, min(MOTOR_MAX_PWM, int(base_pwm + correction)))
+    """Miscela differenziale: correzione >0 (linea a destra) = svolta a destra.
+
+    Svolta a destra = ruota sinistra piu' veloce, destra piu' lenta.
+    Output saturati a ±MOTOR_MAX_PWM.
+    """
+    left = max(-MOTOR_MAX_PWM, min(MOTOR_MAX_PWM, int(base_pwm + correction)))
+    right = max(-MOTOR_MAX_PWM, min(MOTOR_MAX_PWM, int(base_pwm - correction)))
     return left, right
+
+
+def pwm_to_velocity(pwm: int) -> float:
+    """Mappa PWM con segno -> rad/s (segno di marcia avanti incluso).
+
+    Usato dal controller Webots; su hardware reale il PWM va diretto ad Arduino.
+
+    Args:
+        pwm: Valore PWM con segno.
+
+    Returns:
+        Velocita' angolare ruota in rad/s.
+    """
+    return WHEEL_DIRECTION * (pwm / MOTOR_MAX_PWM) * MAX_WHEEL_RAD_S

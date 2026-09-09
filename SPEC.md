@@ -101,7 +101,7 @@ robocup-rescue-line-2027/
 │   ├── state_machine.py         # Macchina a stati principale
 │   ├── vision/
 │   │   ├── __init__.py
-│   │   ├── line_detector.py     # Rilevamento linea verde/argento
+│   │   ├── line_detector.py     # Linea nera M1 + marker verdi M2
 │   │   ├── victim_detector.py   # YOLO/blob per palline
 │   │   └── camera_calibration.py# Calibrazione (manuale, no auto)
 │   ├── control/
@@ -262,7 +262,7 @@ refactor: semplifica logica U-turn
 ```python
 STATES = {
     "SEGUILINEA": {
-        "description": "Segue la linea verde usando camera verde",
+        "description": "Segue la linea nera usando camera verde",
         "transitions": ["OSTACOLO", "VERDE_DX", "VERDE_SX", "STANZA", "UTURN"]
     },
     "OSTACOLO": {
@@ -357,7 +357,7 @@ WEBOTS
 │   ├── Camera (black_filter)
 │   ├── DistanceSensor (x4)
 │   └── Motor (left, right)
-├── Floor (texture linea verde su nero)
+├── Floor (linea nera 19mm su bianco, §7.1)
 ├── Obstacles (box neri per ostacoli)
 └── Victims (sfere colorate per palline)
 ```
@@ -399,36 +399,43 @@ while robot.step(timestep) != -1:
 
 ## 7. Visione Artificiale
 
-### 7.1 Rilevamento Linea (Camera Verde)
+### 7.1 Rilevamento Linea Nera (Camera Verde, M1)
 - **Approccio:** Blob detection con OpenCV
-- **Preprocessing:** Filtro colore HSV per isolare verde
-- **Output:** Angolo di deviazione dalla linea
+- **Preprocessing:** Threshold sul canale V (V <= `LINE_BLACK_MAX_V` = nero)
+- **Output:** Deviazione in pixel dal centro immagine (>0 = linea a destra)
+- **Nota:** il verde in pista indica solo marker di svolta/incroci (M2,
+  `detect_line` con filtro HSV) — la linea da seguire e' nera su bianco.
 
 ```python
 # src/vision/line_detector.py
 import cv2
 import numpy as np
 
-def detect_line(image_bgr):
+from src.utils.config import LINE_BLACK_MAX_V, LINE_MIN_CONTOUR_AREA
+
+def detect_black_line(image_bgr):
     hsv = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
-    lower_green = np.array([40, 50, 50])
-    upper_green = np.array([70, 255, 255])
-    mask = cv2.inRange(hsv, lower_green, upper_green)
-    
+    mask = cv2.inRange(
+        hsv,
+        np.array([0, 0, 0]),
+        np.array([180, 255, LINE_BLACK_MAX_V]),
+    )
+
     # Trova contorni
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = [c for c in contours if cv2.contourArea(c) >= LINE_MIN_CONTOUR_AREA]
     if not contours:
         return None  # Linea non trovata
-    
+
     # Prendi contorno più grande
     largest = max(contours, key=cv2.contourArea)
     x, y, w, h = cv2.boundingRect(largest)
     center_x = x + w / 2
-    
-    # Calcola deviazione dal centro immagine
+
+    # Calcola deviazione dal centro immagine (>0 = linea a destra)
     image_center = image_bgr.shape[1] / 2
     deviation = center_x - image_center
-    
+
     return deviation
 ```
 
