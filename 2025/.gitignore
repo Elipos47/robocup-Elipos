@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+logs/
+.env
+*.log
+Inspiration - Overengineered/
+Inspiration - Overengineered/
+inspiration_overengineered/
