@@ -330,6 +330,17 @@ STATES = {
 webots --version
 ```
 
+> NOTA (verificato 09/09/2026): l'installer R2025a NON include i file PROTO
+> dei robot né le texture: al primo avvio di un sample Webots li scarica da
+> `raw.githubusercontent.com` e il suo downloader interno spesso fallisce
+> (`Cannot download ... error code: 2: Connection closed` / 399) lasciando
+> robot grigi senza texture. La rete è a posto (curl scarica a 200 OK):
+> è il downloader di Webots a troncare le connessioni verso il CDN di GitHub.
+> Fix: `bash scripts/seed_webots_cache.sh` pre-scarica gli asset con curl
+> nella cache (`%LOCALAPPDATA%/Cyberbotics/Webots/cache/assets`,
+> nome file = SHA1 dell'URL). I nostri mondi useranno solo texture locali,
+> quindi il problema non si ripresenta nel progetto.
+
 ### 6.2 Primo Test
 1. Apri Webots → `File > Open Sample World > robots/vehicles/e-puck.wbt`
 2. Clicca `Run` per avviare la simulazione
