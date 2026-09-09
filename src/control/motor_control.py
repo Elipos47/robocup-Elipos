@@ -1,0 +1,53 @@
+"""Controllo motori: PID differenziale con saturazione PWM (SPEC §2.1)."""
+
+from __future__ import annotations
+
+from src.utils.config import MOTOR_MAX_PWM, PID_KD, PID_KI, PID_KP
+
+
+class PIDController:
+    """PID discreto con anti-windup e saturazione."""
+
+    def __init__(
+        self,
+        kp: float = PID_KP,
+        ki: float = PID_KI,
+        kd: float = PID_KD,
+        out_limit: int = MOTOR_MAX_PWM,
+    ) -> None:
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.out_limit = out_limit
+        self._integral = 0.0
+        self._prev_error: float | None = None
+
+    def update(self, error: float, dt: float) -> float:
+        """Calcola correzione; dt in secondi (>0).
+
+        Args:
+            error: Errore corrente (es. deviazione linea).
+            dt: Passo temporale in secondi.
+
+        Returns:
+            Correzione saturata a ±out_limit.
+        """
+        if dt <= 0:
+            raise ValueError("dt deve essere > 0")
+        self._integral += error * dt
+        derivative = 0.0 if self._prev_error is None else (error - self._prev_error) / dt
+        self._prev_error = error
+        out = self.kp * error + self.ki * self._integral + self.kd * derivative
+        return max(-self.out_limit, min(self.out_limit, out))
+
+    def reset(self) -> None:
+        """Azzera stato integrale/derivativo (cambio stato FSM)."""
+        self._integral = 0.0
+        self._prev_error = None
+
+
+def tank_mix(base_pwm: int, correction: float) -> tuple[int, int]:
+    """Miscela differenziale: (pwm_sx, pwm_dx) saturati a ±MOTOR_MAX_PWM."""
+    left = max(-MOTOR_MAX_PWM, min(MOTOR_MAX_PWM, int(base_pwm - correction)))
+    right = max(-MOTOR_MAX_PWM, min(MOTOR_MAX_PWM, int(base_pwm + correction)))
+    return left, right

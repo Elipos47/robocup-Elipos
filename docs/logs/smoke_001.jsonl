@@ -1,0 +1,1 @@
+{"timestamp": "2026-09-09T10:03:30.000Z", "state": "SEGUILINEA", "sensors": {"scenario": "basic_straight"}, "actuators": {"motor_left_pwm": 0, "motor_right_pwm": 0}, "metrics": {"run_id": "smoke_001", "elapsed_time_ms": 0}}

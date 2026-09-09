@@ -1,0 +1,7 @@
+{
+  "name": "basic_straight",
+  "description": "Rettilineo con linea verde continua, nessuno ostacolo (smoke test Fase 1)",
+  "world": "simulation/webots/worlds/rescue_line_basic.wbt",
+  "success_criteria": { "success_rate": 0.9, "max_time_s": 60 },
+  "params": { "base_pwm": 150 }
+}

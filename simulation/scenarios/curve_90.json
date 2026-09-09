@@ -1,0 +1,7 @@
+{
+  "name": "curve_90",
+  "description": "Curva a 90 gradi con marker verde (test VERDE_DX/SX)",
+  "world": "simulation/webots/worlds/rescue_line_basic.wbt",
+  "success_criteria": { "success_rate": 0.9, "max_time_s": 60 },
+  "params": { "base_pwm": 120 }
+}

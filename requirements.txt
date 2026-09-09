@@ -1,0 +1,11 @@
+# Runtime (Raspberry Pi 5 / dev)
+numpy>=1.26
+opencv-python>=4.9
+pyserial>=3.5
+
+# YOLO vittime (opzionale in sim, richiesto Fase 2)
+ultralytics>=8.2
+onnxruntime>=1.18
+
+# Dev / CI
+pytest>=8.0
